@@ -3,3 +3,6 @@ fastapi[standard]
 sqlmodel
 pydantic-settings
 pytest
+pytest-dotenv
+psycopg2
+httpx

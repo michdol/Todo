@@ -1,6 +1,7 @@
 import bcrypt
 
 from fastapi import HTTPException
+from sqlmodel import select
 
 from src.db import SessionDependency
 from src.models import User
@@ -27,16 +28,20 @@ class AuthenticationService:
         self.session = session
 
     def authenticate(self, payload: AuthenticationRequest) -> bool:
-        user: User = self.session.get(User).where(email=payload.email)
-        if not user:
-            raise HTTPException(status_code=400, detail="Invalid email or password")
+        with self.session as s:
+            statement = select(User).where(User.email == payload.email)
+            results = s.exec(statement)
+            user = results.one()
 
-        password_valid = verify_password(payload.password, user.password)
-        if not password_valid:
-            raise HTTPException(status_code=400, detail="Invalid email or password")
+            # user: User = self.session.get(User).where(email=payload.email)
+            if not user:
+            # if not user:
+                raise HTTPException(status_code=400, detail="Invalid email or password")
+            if not verify_password(payload.password, user.password):
+                raise HTTPException(status_code=400, detail="Invalid email or password")
 
-        # TODO: cookie
-        return password_valid
+        # # TODO: cookie
+        # return password_valid
 
     def create_user(self, payload: AuthenticationRequest) -> User:
         user = User(**payload.model_dump())

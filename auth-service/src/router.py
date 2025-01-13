@@ -1,13 +1,14 @@
 from fastapi import APIRouter
 
 from src.db import SessionDependency
+from src.schemas import AuthenticationRequest
 from src.service import AuthenticationService
 
 
-router = APIRouter("/api/v1")
+router = APIRouter(prefix="/api/v1")
 
-@router.get("/authenticate")
-def authenticate(session: SessionDependency):
+@router.post("/authenticate")
+def authenticate(session: SessionDependency, payload: AuthenticationRequest):
     auth_service = AuthenticationService(session)
-    is_authenticated = auth_service.authenticate()
+    is_authenticated = auth_service.authenticate(payload)
     return is_authenticated
