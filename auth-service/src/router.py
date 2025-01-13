@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends
 
-from src.schemas import AuthenticationRequest
+from src.schemas import AuthenticationRequest, TokenRequest
 from src.service import AuthenticationService
 
 
@@ -18,5 +18,12 @@ def authenticate(payload: AuthenticationRequest, service: authentication_service
 
 @router.post("/register")
 def register(payload: AuthenticationRequest, service: authentication_service):
-    user = service.create_user(payload)
+    service.create_user(payload)
     return True
+
+
+@router.post("/verify_token")
+def verify_token(payload: TokenRequest, service: authentication_service):
+    # TODO: security this endpoint with API_KEY
+    is_valid = service.verify_token(payload.token)
+    return {"valid": is_valid}

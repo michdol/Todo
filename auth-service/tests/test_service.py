@@ -47,3 +47,29 @@ def test_register_existing_email(single_test_user, client: TestClient, session: 
     with session:
         count = session.exec(select(func.count(col(User.id)))).one()
         assert count == 1
+
+
+def test_register_invalid_email(client: TestClient, session: Session):
+    response = client.post("/api/v1/register", json={"email": "user@email", "password": "password"})
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["msg"].startswith("value is not a valid email address")
+
+    with session:
+        count = session.exec(select(func.count(col(User.id)))).one()
+        assert count == 0
+
+
+def test_verify_token(client: TestClient, session: Session):
+    service = AuthenticationService(session)
+    user = User(email="user@email.com", password="password")
+    token = service._encode_user(user)
+    response = client.post("/api/v1/verify_token", json={"token": token})
+    assert response.status_code == 200
+    assert response.json() == {"valid": True}
+
+
+def test_verify_token_invalid_token(client: TestClient, session: Session):
+    token = "any string"
+    response = client.post("/api/v1/verify_token", json={"token": token})
+    assert response.status_code == 200
+    assert response.json() == {"valid": False}
