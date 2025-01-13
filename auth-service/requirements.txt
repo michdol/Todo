@@ -1,2 +1,5 @@
+bcrypt
 fastapi[standard]
 sqlmodel
+pydantic-settings
+pytest
