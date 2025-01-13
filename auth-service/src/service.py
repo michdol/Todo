@@ -60,7 +60,7 @@ class AuthenticationService:
         try:
             self._decode_user(token)
             return True
-        except:
+        except jwt.exceptions.DecodeError:
             return False
 
     def _encode_user(self, user: User):

@@ -24,6 +24,6 @@ def register(payload: AuthenticationRequest, service: authentication_service):
 
 @router.post("/verify_token")
 def verify_token(payload: TokenRequest, service: authentication_service):
-    # TODO: security this endpoint with API_KEY
+    # TODO: secure this endpoint with API_KEY
     is_valid = service.verify_token(payload.token)
     return {"valid": is_valid}
