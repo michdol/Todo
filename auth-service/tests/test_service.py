@@ -1,9 +1,49 @@
+import pytest
+
 from fastapi.testclient import TestClient
+from sqlmodel import Session, select, func, col
+
 from src.models import User
-from tests.fixtures import single_test_user, client_fixture, session_fixture
+from src.service import AuthenticationService
+from tests.fixtures import single_test_user, client_fixture, session_fixture, clean_user_table
 
 
-def test_create_user(single_test_user, client: TestClient):
+def test_authenticate_with_password(single_test_user, client: TestClient, session: Session):
     response = client.post("/api/v1/authenticate", json={"email": "user@email.com", "password": "password"})
     assert response.status_code == 200
-    assert response.json() == True
+    token = response.json()
+    service = AuthenticationService(session)
+    service._decode_user(token)
+
+
+def test_authenticate_with_password_password_incorrect(single_test_user, client: TestClient, session: Session):
+    response = client.post("/api/v1/authenticate", json={"email": "user@email.com", "password": "wrong-password"})
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid email or password"}
+
+
+def test_authenticate_with_password_email_incorrect(single_test_user, client: TestClient, session: Session):
+    response = client.post("/api/v1/authenticate", json={"email": "wrong-user@email.com", "password": "password"})
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid email or password"}
+
+
+def test_register(client: TestClient, session: Session):
+    response = client.post("/api/v1/register", json={"email": "user@email.com", "password": "password"})
+    assert response.status_code == 200
+
+    with session:
+        statement = select(User).where(User.email == "user@email.com")
+        result = session.exec(statement)
+        user = result.one()
+        assert user.email == "user@email.com"
+
+
+def test_register_existing_email(single_test_user, client: TestClient, session: Session):
+    response = client.post("/api/v1/register", json={"email": "user@email.com", "password": "password"})
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Email already taken"}
+
+    with session:
+        count = session.exec(select(func.count(col(User.id)))).one()
+        assert count == 1

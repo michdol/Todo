@@ -6,3 +6,4 @@ pytest
 pytest-dotenv
 psycopg2
 httpx
+pyjwt

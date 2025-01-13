@@ -1,14 +1,14 @@
 import pytest
 
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, delete
 from sqlmodel.pool import StaticPool
 
 from src.db import get_session
 from src.main import app
 from src.models import User
 from src.settings.config import settings
-from src.service import get_password_hash
+from src.service import _get_password_hash
 
 
 @pytest.fixture(name="session")
@@ -34,10 +34,18 @@ def client_fixture(session: Session):
 
 @pytest.fixture
 def single_test_user(session: Session):
-    user = User(email="user@email.com", password=get_password_hash("password"))
+    user = User(email="user@email.com", password=_get_password_hash("password"))
     session.add(user)
     session.commit()
     session.refresh(user)
     yield user
     session.delete(user)
     session.commit()
+
+
+@pytest.fixture(autouse=True)
+def clean_user_table(session: Session):
+    with session as s:
+        statement = delete(User)
+        s.exec(statement)
+        s.commit()
