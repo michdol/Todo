@@ -6,7 +6,6 @@ from sqlalchemy.exc import NoResultFound, IntegrityError
 from src.db import SessionDependency
 from src.models import Todo
 from src.schemas import CreateTodoRequest
-from src.settings.config import settings
 
 
 class TodoService:

@@ -11,6 +11,20 @@ from tests.fixtures import client_fixture, session_fixture, clean_todo_table, th
 # Payload: {"id": 14, "email": "test@user.com"}
 TEST_ID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdXNlci5jb20iLCJpZCI6MTR9.9V4u2hZ2IAgIBwQv5pLE-AOi0NGi9pSElAm3V-1ns7w"
 
+params = (
+    ["GET", "/api/v1/todo"],
+    ["GET", "/api/v1/todo/1"],
+    ["POST", "/api/v1/todo"],
+    ["PATCH", "/api/v1/todo/1"],
+    ["DELETE", "/api/v1/todo/1"],
+)
+
+@pytest.mark.parametrize("method,endpoint", params)
+def test_get_todos_no_id_token(three_todos_two_users, client: TestClient, session: Session, method: str, endpoint: str):
+    response = client.request(method=method, url=endpoint)
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Unauthorized"}
+
 
 def test_get_todos(three_todos_two_users, client: TestClient, session: Session):
     response = client.get("/api/v1/todo", headers={"id-token": TEST_ID_TOKEN})
