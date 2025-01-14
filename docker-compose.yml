@@ -29,6 +29,7 @@ services:
     environment:
       - DATABASE_URI=postgresql://todo_username:todo_password@todo_db/todo_username
       - AUTH_SERVICE_HOST_URL=http://auth_service:8000/api/v1
+    env_file: ./todo-service/.env
 
   todo_db:
     image: postgres:12.1-alpine

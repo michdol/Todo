@@ -1,3 +1,10 @@
+alembic
+bcrypt
 fastapi[standard]
 sqlmodel
 pydantic-settings
+pyjwt
+pytest
+pytest-dotenv
+psycopg2
+httpx
