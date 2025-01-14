@@ -27,7 +27,7 @@ services:
     ports:
       - 8002:8000
     environment:
-      - DATABASE_URI=postgresql://todo_username:todo_password@todo_db/todo_username
+      - DATABASE_URI=postgresql://todo_username:todo_password@todo_db/todo_db
       - AUTH_SERVICE_HOST_URL=http://auth_service:8000/api/v1
     env_file: ./todo-service/.env
 

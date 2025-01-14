@@ -61,8 +61,8 @@ def test_register_invalid_email(client: TestClient, session: Session):
 
 def test_verify_token(client: TestClient, session: Session):
     service = AuthenticationService(session)
-    user = User(email="user@email.com", password="password")
-    token = service._encode_user(user)
+    user = User(id=1, email="user@email.com", password="password")
+    token = service._encode_user({"email": user.email, "id": user.id})
     response = client.post("/api/v1/verify_token", json={"token": token})
     assert response.status_code == 200
     assert response.json() == {"valid": True}

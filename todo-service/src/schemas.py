@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
 
-class SomeRequest(BaseModel):
-    pass
+class CreateTodoRequest(BaseModel):
+    title: str
+    description: str | None = ""
+    done: bool | None = False
