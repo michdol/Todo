@@ -38,3 +38,19 @@ class TodoService:
                 return todo
             except IntegrityError:
                 raise HTTPException(400, detail="Bad Request")
+
+    def update(self, id_: int, payload: CreateTodoRequest, user_id: int) -> Todo:
+        todo = self.get(id_, user_id)
+        update_data = payload.model_dump(exclude_unset=True)
+        item = todo.model_copy(update=update_data)
+        with self.session:
+            self.session.add(item)
+            self.session.commit()
+            self.session.refresh(item)
+            return item
+
+    def delete(self, id_: int, user_id: int):
+        todo = self.get(id_, user_id)
+        with self.session:
+            self.session.delete(todo)
+            self.session.commit()

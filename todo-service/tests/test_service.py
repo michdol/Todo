@@ -1,8 +1,10 @@
 import pytest
 
 from fastapi.testclient import TestClient
-from sqlmodel import Session, select, func, col
+from sqlalchemy.exc import NoResultFound
+from sqlmodel import Session, select
 
+from src.models import Todo
 from tests.fixtures import client_fixture, session_fixture, clean_todo_table, three_todos_two_users
 
 
@@ -73,3 +75,29 @@ def test_create_todo(client: TestClient, session: Session):
     assert not todo["done"]
     assert "id" in todo
     assert isinstance(todo["id"], int)
+
+
+def test_update_todo(three_todos_two_users, client: TestClient):
+    data = {
+        "title": "Updated title",
+        "done": True
+    }
+    response = client.patch("/api/v1/todo/1", headers={"id-token": TEST_ID_TOKEN}, json=data)
+
+    assert response.status_code == 200
+    todo = response.json()
+    assert todo["title"] == "Updated title"
+    assert todo["description"] == "Write test"
+    assert todo["user_id"] == 14
+    assert todo["done"]
+    assert todo["id"] == 1
+
+
+def test_delete_todo(three_todos_two_users, client: TestClient, session: Session):
+    response = client.delete("/api/v1/todo/1", headers={"id-token": TEST_ID_TOKEN})
+
+    assert response.status_code == 204
+    with session:
+        statement = select(Todo).where(Todo.id == 1)
+        results = session.exec(statement)
+        assert results.first() is None
