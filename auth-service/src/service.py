@@ -34,7 +34,7 @@ class AuthenticationService:
         if not _verify_password(payload.password, user.password):
             raise HTTPException(status_code=400, detail="Invalid email or password")
 
-        return self._encode_user(user)
+        return self._encode_user({"email": user.email, "id": user.id})
 
     def _get_user_by_email(self, email: str):
         with self.session as session:
@@ -63,8 +63,8 @@ class AuthenticationService:
         except jwt.exceptions.DecodeError:
             return False
 
-    def _encode_user(self, user: User):
-        return jwt.encode(user.model_dump(), settings.SECRET_KEY, algorithm="HS256")
+    def _encode_user(self, data: dict):
+        return jwt.encode(data, settings.SECRET_KEY, algorithm="HS256")
 
     def _decode_user(self, token: str):
         return jwt.decode(token, settings.SECRET_KEY, algorithms="HS256")

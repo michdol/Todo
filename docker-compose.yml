@@ -8,6 +8,7 @@ services:
       - 8001:8000
     environment:
       - DATABASE_URI=postgresql://auth_username:auth_password@auth_db/auth_db
+    env_file: ./auth-service/.env
 
   auth_db:
     image: postgres:12.1-alpine

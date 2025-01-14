@@ -45,7 +45,7 @@ def single_test_user(session: Session):
 
 @pytest.fixture(autouse=True)
 def clean_user_table(session: Session):
-    with session as s:
+    with session:
         statement = delete(User)
-        s.exec(statement)
-        s.commit()
+        session.exec(statement)
+        session.commit()
