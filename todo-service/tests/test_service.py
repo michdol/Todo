@@ -1,7 +1,6 @@
 import pytest
 
 from fastapi.testclient import TestClient
-from sqlalchemy.exc import NoResultFound
 from sqlmodel import Session, select
 
 from src.models import Todo
@@ -90,8 +89,17 @@ def test_create_todo(client: TestClient, session: Session):
     assert "id" in todo
     assert isinstance(todo["id"], int)
 
+    # Check DB
+    todo_id = todo["id"]
+    todo = session.get(Todo, todo_id)
+    assert todo.title == "Fix bug"
+    assert todo.description == "Fix authentication bug"
+    assert todo.user_id == 14
+    assert not todo.done
+    assert todo.id == todo_id
 
-def test_update_todo(three_todos_two_users, client: TestClient):
+
+def test_update_todo(three_todos_two_users, client: TestClient, session: Session):
     data = {
         "title": "Updated title",
         "done": True
@@ -105,6 +113,37 @@ def test_update_todo(three_todos_two_users, client: TestClient):
     assert todo["user_id"] == 14
     assert todo["done"]
     assert todo["id"] == 1
+
+    # Check from DB
+    todo = session.get(Todo, 1)
+    assert todo.title == "Updated title"
+    assert todo.description == "Write test"
+    assert todo.user_id == 14
+    assert todo.done
+    assert todo.id == 1
+
+
+def test_update_todo_done_only(three_todos_two_users, client: TestClient, session: Session):
+    data = {
+        "done": True
+    }
+    response = client.patch("/api/v1/todo/1", headers={"id-token": TEST_ID_TOKEN}, json=data)
+
+    assert response.status_code == 200
+    todo = response.json()
+    assert todo["title"] == "Todo 1"
+    assert todo["description"] == "Write test"
+    assert todo["user_id"] == 14
+    assert todo["done"]
+    assert todo["id"] == 1
+
+    # Check from DB
+    todo = session.get(Todo, 1)
+    assert todo.title == "Todo 1"
+    assert todo.description == "Write test"
+    assert todo.user_id == 14
+    assert todo.done
+    assert todo.id == 1
 
 
 def test_delete_todo(three_todos_two_users, client: TestClient, session: Session):

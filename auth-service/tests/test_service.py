@@ -11,9 +11,9 @@ from tests.fixtures import single_test_user, client_fixture, session_fixture, cl
 def test_authenticate_with_password(single_test_user, client: TestClient, session: Session):
     response = client.post("/api/v1/authenticate", json={"email": "user@email.com", "password": "password"})
     assert response.status_code == 200
-    token = response.json()
+    data = response.json()
     service = AuthenticationService(session)
-    service._decode_user(token)
+    service._decode_user(data["token"])
 
 
 def test_authenticate_with_password_password_incorrect(single_test_user, client: TestClient, session: Session):

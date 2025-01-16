@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 
+from src.schemas import User
 from src.settings.config import settings
 
 
@@ -16,7 +17,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms="HS256")
-            setattr(request.state, "user", payload)
+            setattr(request.state, "user", User(**payload))
         except jwt.exceptions.DecodeError:
             return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
         

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TODO App</title>
+    <style>
+        /* Basic styling for demonstration */
+        body { font-family: sans-serif; }
+        .todo-item { border: 1px solid #ccc; margin-bottom: 10px; padding: 10px; }
+        .todo-item.done { text-decoration: line-through; }
+        #todo-list { margin-top: 20px; }
+        #auth-forms { display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>TODO App</h1>
+
+    <div id="auth-forms">
+        <div id="register-form">
+            <h2>Register</h2>
+            <input type="email" id="reg-email" placeholder="Email"><br>
+            <input type="password" id="reg-password" placeholder="Password"><br>
+            <button onclick="register()">Register</button>
+            <div id="reg-message"></div>
+        </div>
+        <div id="login-form">
+            <h2>Login</h2>
+            <input type="email" id="login-email" placeholder="Email"><br>
+            <input type="password" id="login-password" placeholder="Password"><br>
+            <button onclick="login()">Login</button>
+            <div id="login-message"></div>
+        </div>
+    </div>
+
+    <button id="auth-toggle">Show Auth Forms</button>
+
+    <div id="todo-form" style="display:none;">
+        <h2>Add/Edit TODO</h2>
+        <input type="hidden" id="todo-id">
+        <input type="text" id="todo-title" placeholder="Title"><br>
+        <textarea id="todo-description" placeholder="Description"></textarea><br>
+        <button onclick="saveTodo()">Save</button>
+        <button onclick="toggleTodoForm()">Cancel</button>
+    </div>
+
+    <button id="add-todo" style="display:none;">Add TODO</button>
+
+    <div id="todo-list"></div>
+
+    <script>
+        const TODO_API_BASE = 'http://localhost:8002/api/v1';
+        const AUTH_API_BASE = 'http://localhost:8001/api/v1';
+        let token = null;
+
+        document.getElementById('auth-toggle').addEventListener('click', () => {
+          document.getElementById('auth-forms').style.display = document.getElementById('auth-forms').style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.getElementById('add-todo').addEventListener('click', () => {
+            document.getElementById('todo-form').style.display = 'block';
+            document.getElementById('todo-id').value = '';
+            document.getElementById('todo-title').value = '';
+            document.getElementById('todo-description').value = '';
+        });
+
+        function toggleTodoForm(){
+            document.getElementById('todo-form').style.display = 'none';
+        }
+
+        async function register() {
+          const email = document.getElementById('reg-email').value;
+          const password = document.getElementById('reg-password').value;
+          try {
+            const response = await fetch(`${AUTH_API_BASE}/register`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password }),
+              credentials:"include",
+            });
+            const data = await response.json();
+            document.getElementById('reg-message').textContent = data.message || "Registration successful";
+          } catch (error) {
+            document.getElementById('reg-message').textContent = "Registration failed";
+          }
+        }
+
+        async function login() {
+          const email = document.getElementById('login-email').value;
+          const password = document.getElementById('login-password').value;
+          try {
+            const response = await fetch(`${AUTH_API_BASE}/authenticate`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, password }),
+            });
+            const data = await response.json();
+            token = data.token;
+            localStorage.setItem('token',token)
+            document.getElementById('login-message').textContent = "Login successful";
+            loadTodos();
+            document.getElementById('auth-forms').style.display = 'none';
+            document.getElementById('add-todo').style.display = 'block';
+          } catch (error) {
+            document.getElementById('login-message').textContent = "Login failed";
+          }
+        }
+
+        async function loadTodos() {
+            token = localStorage.getItem('token');
+            if (!token){
+                return;
+            }
+            try {
+                const response = await fetch(`${TODO_API_BASE}/todo`, {
+                    headers: { 'id-token': `${token}` },
+                });
+                const todos = await response.json();
+                displayTodos(todos);
+            } catch (error) {
+                console.error("Error loading todos:", error);
+            }
+        }
+
+        function displayTodos(todos) {
+            const todoList = document.getElementById('todo-list');
+            todoList.innerHTML = ''; // Clear existing todos
+            todos.forEach(todo => {
+                const todoDiv = document.createElement('div');
+                todoDiv.className = `todo-item ${todo.done ? 'done' : ''}`;
+                todoDiv.innerHTML = `
+                    <h3>${todo.title}</h3>
+                    <p>${todo.description}</p>
+                    <button onclick="editTodo(${todo.id})">Edit</button>
+                    <button onclick="deleteTodo(${todo.id})">Delete</button>
+                    <input type="checkbox" ${todo.done ? 'checked' : ''} onchange="toggleDone(${todo.id}, this.checked)">
+                `;
+                todoList.appendChild(todoDiv);
+            });
+        }
+
+        async function saveTodo() {
+          const id = document.getElementById('todo-id').value;
+          const title = document.getElementById('todo-title').value;
+          const description = document.getElementById('todo-description').value;
+          const method = id ? 'PATCH' : 'POST';
+          const url = id ? `${TODO_API_BASE}/todo/${id}` : `${TODO_API_BASE}/todo`;
+          try {
+            const response = await fetch(url, {
+              method,
+              headers: {
+                  'Content-Type': 'application/json',
+                  'id-token': token
+              },
+              body: JSON.stringify({ title, description }),
+            });
+            loadTodos();
+            toggleTodoForm();
+          } catch (error) {
+            console.error("Error saving todo:", error);
+          }
+        }
+
+        async function editTodo(id) {
+            try {
+                const response = await fetch(`${TODO_API_BASE}/todo/${id}`, {
+                    headers: { 'id-token': token }
+                });
+                const todo = await response.json();
+                document.getElementById('todo-id').value = todo.id;
+                document.getElementById('todo-title').value = todo.title;
+                document.getElementById('todo-description').value = todo.description;
+                document.getElementById('todo-form').style.display = 'block';
+            } catch (error) {
+                console.error("Error editing todo:", error);
+            }
+        }
+
+        async function deleteTodo(id) {
+            try {
+                await fetch(`${TODO_API_BASE}/todo/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'id-token': token }
+                });
+                loadTodos();
+            } catch (error) {
+                console.error("Error deleting todo:", error);
+            }
+        }
+
+        async function toggleDone(id, done) {
+            try {
+                await fetch(`${TODO_API_BASE}/todo/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'id-token': token
+                    },
+                    body: JSON.stringify({ done }),
+                });
+                loadTodos();
+            } catch (error) {
+                console.error("Error toggling done:", error);
+            }
+        }
+
+        loadTodos(); // Load todos on page load
+    </script>
+
+</body>
+</html>

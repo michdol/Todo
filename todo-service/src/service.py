@@ -1,11 +1,17 @@
 from fastapi import HTTPException
 from typing import Sequence
-from sqlmodel import select
+from sqlmodel import select, update
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
 from src.db import SessionDependency
 from src.models import Todo
-from src.schemas import CreateTodoRequest
+from src.schemas import CreateTodoRequest, PatchTodoRequest
+
+
+# import logging
+# logging.basicConfig()
+# logger = logging.getLogger('sqlalchemy.engine')
+# logger.setLevel(logging.DEBUG)
 
 
 class TodoService:
@@ -38,15 +44,15 @@ class TodoService:
             except IntegrityError:
                 raise HTTPException(400, detail="Bad Request")
 
-    def update(self, id_: int, payload: CreateTodoRequest, user_id: int) -> Todo:
-        todo = self.get(id_, user_id)
-        update_data = payload.model_dump(exclude_unset=True)
-        item = todo.model_copy(update=update_data)
-        with self.session:
-            self.session.add(item)
-            self.session.commit()
-            self.session.refresh(item)
-            return item
+    def update(self, id_: int, payload: PatchTodoRequest, user_id: int) -> Todo:
+        with self.session as session:
+            todo = self.get(id_, user_id)
+            update_data = payload.model_dump(exclude_unset=True)
+            item = todo.model_copy(update=update_data)
+            statement = update(Todo).where(Todo.id == todo.id).values(item.model_dump())
+            session.exec(statement)
+            session.commit()
+            return self.get(id_, user_id)
 
     def delete(self, id_: int, user_id: int):
         todo = self.get(id_, user_id)

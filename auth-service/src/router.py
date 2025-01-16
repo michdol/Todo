@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 
 from src.schemas import AuthenticationRequest, TokenRequest
 from src.service import AuthenticationService
@@ -11,9 +11,11 @@ authentication_service = Annotated[AuthenticationService, Depends(Authentication
 
 
 @router.post("/authenticate")
-def authenticate(payload: AuthenticationRequest, service: authentication_service):
-    is_authenticated = service.authenticate(payload)
-    return is_authenticated
+def authenticate(payload: AuthenticationRequest, service: authentication_service, response: Response):
+    token = service.authenticate(payload)
+    if token:
+        response.set_cookie(key="id-token", value=token, samesite="lax")
+    return {"token": token}
 
 
 @router.post("/register")
