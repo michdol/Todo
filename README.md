@@ -41,3 +41,7 @@ Running the application requires only 1 command.
 `docker-compose up -d`
 
 Open the frontend at localhost in the browser.
+
+# Diagram
+
+![Todo app](diagram.png)
