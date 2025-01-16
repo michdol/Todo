@@ -1,11 +1,9 @@
 services:
   auth_service:
     build: ./auth-service
-    command: fastapi dev src/main.py --host 0.0.0.0 --port 8000 # TODO: write command
+    command: fastapi dev src/main.py --host 0.0.0.0 --port 8000
     volumes:
       - ./auth-service/:/app/
-    ports:
-      - 8001:8000
     environment:
       - DATABASE_URI=postgresql://auth_username:auth_password@auth_db/auth_db
     env_file: ./auth-service/.env
@@ -21,11 +19,9 @@ services:
 
   todo_service:
     build: ./todo-service
-    command: fastapi dev src/main.py --host 0.0.0.0 --port 8000 # TODO: write command
+    command: fastapi dev src/main.py --host 0.0.0.0 --port 8000
     volumes:
       - ./todo-service/:/app/
-    ports:
-      - 8002:8000
     environment:
       - DATABASE_URI=postgresql://todo_username:todo_password@todo_db/todo_db
       - AUTH_SERVICE_HOST_URL=http://auth_service:8000/api/v1
@@ -39,6 +35,14 @@ services:
       - POSTGRES_USER=todo_username
       - POSTGRES_PASSWORD=todo_password
       - POSTGRES_DB=todo_db
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - todo_service
+      - auth_service
 
 volumes:
   postgres_data_auth:

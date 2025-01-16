@@ -56,13 +56,6 @@ class AuthenticationService:
             except IntegrityError:
                 raise HTTPException(status_code=400, detail="Email already taken")
 
-    def verify_token(self, token: str) -> bool:
-        try:
-            self._decode_user(token)
-            return True
-        except jwt.exceptions.DecodeError:
-            return False
-
     def _encode_user(self, data: dict):
         return jwt.encode(data, settings.SECRET_KEY, algorithm="HS256")
 

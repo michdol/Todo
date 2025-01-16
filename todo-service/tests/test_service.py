@@ -10,12 +10,14 @@ from tests.fixtures import client_fixture, session_fixture, clean_todo_table, th
 # Payload: {"id": 14, "email": "test@user.com"}
 TEST_ID_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdXNlci5jb20iLCJpZCI6MTR9.9V4u2hZ2IAgIBwQv5pLE-AOi0NGi9pSElAm3V-1ns7w"
 
+BASE_URL = "/api/v1/todo"
+
 params = (
-    ["GET", "/api/v1/todo"],
-    ["GET", "/api/v1/todo/1"],
-    ["POST", "/api/v1/todo"],
-    ["PATCH", "/api/v1/todo/1"],
-    ["DELETE", "/api/v1/todo/1"],
+    ["GET", f"{BASE_URL}/todo"],
+    ["GET", f"{BASE_URL}/todo/1"],
+    ["POST", f"{BASE_URL}/todo"],
+    ["PATCH", f"{BASE_URL}/todo/1"],
+    ["DELETE", f"{BASE_URL}/todo/1"],
 )
 
 @pytest.mark.parametrize("method,endpoint", params)
@@ -26,7 +28,7 @@ def test_get_todos_no_id_token(three_todos_two_users, client: TestClient, sessio
 
 
 def test_get_todos(three_todos_two_users, client: TestClient, session: Session):
-    response = client.get("/api/v1/todo", headers={"id-token": TEST_ID_TOKEN})
+    response = client.get(f"{BASE_URL}/todo", headers={"id-token": TEST_ID_TOKEN})
     assert response.status_code == 200
     expected_response = [
         {
@@ -48,13 +50,13 @@ def test_get_todos(three_todos_two_users, client: TestClient, session: Session):
 
 
 def test_get_todos_not_found(client: TestClient):
-    response = client.get("/api/v1/todo", headers={"id-token": TEST_ID_TOKEN})
+    response = client.get(f"{BASE_URL}/todo", headers={"id-token": TEST_ID_TOKEN})
     assert response.status_code == 200
     assert response.json() == []
 
 
 def test_get_todo(three_todos_two_users, client: TestClient):
-    response = client.get("/api/v1/todo/1", headers={"id-token": TEST_ID_TOKEN})
+    response = client.get(f"{BASE_URL}/todo/1", headers={"id-token": TEST_ID_TOKEN})
     assert response.status_code == 200
     expected_response = {
         "id": 1,
@@ -67,7 +69,7 @@ def test_get_todo(three_todos_two_users, client: TestClient):
 
 
 def test_get_todo_from_other_user(three_todos_two_users, client: TestClient):
-    response = client.get("/api/v1/todo/3", headers={"id-token": TEST_ID_TOKEN})
+    response = client.get(f"{BASE_URL}/todo/3", headers={"id-token": TEST_ID_TOKEN})
     assert response.status_code == 404
     assert response.json() == {"detail": "Not Found"}
 
@@ -77,7 +79,7 @@ def test_create_todo(client: TestClient, session: Session):
         "title": "Fix bug",
         "description": "Fix authentication bug",
     }
-    response = client.post("/api/v1/todo", headers={"id-token": TEST_ID_TOKEN}, json=data)
+    response = client.post(f"{BASE_URL}/todo", headers={"id-token": TEST_ID_TOKEN}, json=data)
 
     assert response.status_code == 201
     todo = response.json()
@@ -104,7 +106,7 @@ def test_update_todo(three_todos_two_users, client: TestClient, session: Session
         "title": "Updated title",
         "done": True
     }
-    response = client.patch("/api/v1/todo/1", headers={"id-token": TEST_ID_TOKEN}, json=data)
+    response = client.patch(f"{BASE_URL}/todo/1", headers={"id-token": TEST_ID_TOKEN}, json=data)
 
     assert response.status_code == 200
     todo = response.json()
@@ -127,7 +129,7 @@ def test_update_todo_done_only(three_todos_two_users, client: TestClient, sessio
     data = {
         "done": True
     }
-    response = client.patch("/api/v1/todo/1", headers={"id-token": TEST_ID_TOKEN}, json=data)
+    response = client.patch(f"{BASE_URL}/todo/1", headers={"id-token": TEST_ID_TOKEN}, json=data)
 
     assert response.status_code == 200
     todo = response.json()
@@ -147,7 +149,7 @@ def test_update_todo_done_only(three_todos_two_users, client: TestClient, sessio
 
 
 def test_delete_todo(three_todos_two_users, client: TestClient, session: Session):
-    response = client.delete("/api/v1/todo/1", headers={"id-token": TEST_ID_TOKEN})
+    response = client.delete(f"{BASE_URL}/todo/1", headers={"id-token": TEST_ID_TOKEN})
 
     assert response.status_code == 204
     with session:

@@ -5,7 +5,7 @@ from src.schemas import AuthenticationRequest, TokenRequest
 from src.service import AuthenticationService
 
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter(prefix="/api/v1/auth")
 
 authentication_service = Annotated[AuthenticationService, Depends(AuthenticationService)]
 
@@ -22,10 +22,3 @@ def authenticate(payload: AuthenticationRequest, service: authentication_service
 def register(payload: AuthenticationRequest, service: authentication_service):
     service.create_user(payload)
     return True
-
-
-@router.post("/verify_token")
-def verify_token(payload: TokenRequest, service: authentication_service):
-    # TODO: secure this endpoint with API_KEY
-    is_valid = service.verify_token(payload.token)
-    return {"valid": is_valid}

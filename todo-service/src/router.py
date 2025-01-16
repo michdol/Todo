@@ -5,7 +5,7 @@ from src.schemas import CreateTodoRequest, PatchTodoRequest
 from src.service import TodoService
 
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter(prefix="/api/v1/todo")
 
 todo_service = Annotated[TodoService, Depends(TodoService)]
 
