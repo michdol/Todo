@@ -1,5 +1,9 @@
 # Todo on Microservices
 
+![Todo app](diagram.png)
+
+# Description
+
 Basic Todo application built using microservices architectural pattern.
 
 The application consists of api gateway and 2 microservices: authentication and todo.
@@ -41,7 +45,3 @@ Running the application requires only 1 command.
 `docker-compose up -d`
 
 Open the frontend at localhost in the browser.
-
-# Diagram
-
-![Todo app](diagram.png)
