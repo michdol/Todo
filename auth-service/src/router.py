@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Response
 
-from src.schemas import AuthenticationRequest, TokenRequest
+from src.schemas import AuthenticationRequest
 from src.service import AuthenticationService
 
 
