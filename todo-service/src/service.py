@@ -9,6 +9,9 @@ from src.schemas import CreateTodoRequest, PatchTodoRequest
 
 
 class TodoService:
+    """
+    Todo service providing basic CRUD operations for the Todo model.
+    """
     def __init__(self, session: SessionDependency):
         self.session = session
 

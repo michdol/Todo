@@ -45,6 +45,9 @@ def _verify_password(plain_password, hashed_password) -> bool:
 
 
 class AuthenticationService:
+    """
+    Service to register and authenticate users.
+    """
     def __init__(self, session: SessionDependency):
         self.session = session
 
